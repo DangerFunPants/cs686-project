@@ -1,0 +1,230 @@
+name: "PatternRecognition2017"
+
+layer {
+    name: "data"
+    type: "Data"
+
+    # We produce data and label blobs because the LMDB database
+    # contains the data and the labels
+    top: "data"
+    top: "label"
+
+    # Use this data for the training phase
+    include {
+        phase: TRAIN
+    }
+
+    # This was something that I pulled from the MNIST model definition.
+    # It will cause the pixel values to be scaled so that they are in the 
+    # range [0, 1]. 0.00390625 is 1/256, it's not just a crazy magic number.
+    transform_param {
+        scale: 0.00390625
+    }
+
+    data_param {
+        source: "lmdb-databases/training_set.lmdb"
+        # We need to pick a value for this
+        batch_size: 64
+        backend: LMDB
+    }
+}
+
+layer {
+    name: "data"
+    type: "Data"
+    top: "data"
+    top: "label"
+
+    include {
+        phase: TEST
+    }
+
+    # This was something that I pulled from the MNIST model definition.
+    # It will cause the pixel values to be scaled so that they are in the 
+    # range [0, 1]. 0.00390625 is 1/256, it's not just a crazy magic number.
+    transform_param {
+        scale: 0.00390625
+    }
+
+    data_param {
+        source: "lmdb-databases/validation_set.lmdb"
+        # We need to pick a value for this
+        batch_size: 64
+        backend: LMDB
+    }
+}
+
+layer {
+    name: "conv1"
+    type: "Convolution"
+    bottom: "data"
+    top: "conv1"
+
+    param { lr_mult: 1 }
+    param { lr_mult: 2 }
+
+    convolution_param {
+        num_output: 20 kernel_size: 5
+        stride: 1
+        weight_filler { type: "xavier" }
+        bias_filler { type: "constant" }
+    }
+}
+
+layer {
+    name: "pool1"
+    type: "Pooling"
+    bottom: "conv1"
+    top: "pool1"
+    pooling_param {
+        pool: MAX
+        kernel_size: 2
+        stride: 2
+    }
+}
+
+layer {
+    name: "conv2"
+    type: "Convolution"
+    bottom: "pool1"
+    top: "conv2"
+    param { lr_mult: 1 }
+    param { lr_mult: 2 }
+
+    convolution_param {
+        num_output: 50
+        kernel_size: 5
+        stride: 1
+        weight_filler { type: "xavier" }
+        bias_filler { type: "constant" }
+    }
+}
+
+layer {
+    name: "pool2"
+    type: "Pooling"
+    bottom: "conv2"
+    top: "pool2"
+    pooling_param {
+        pool: MAX
+        kernel_size: 2
+        stride: 2
+    }
+}
+
+layer {
+    name: "conv3"
+    type: "Convolution"
+    bottom: "pool2"
+    top: "conv3"
+
+    param { lr_mult: 1 }
+    param { lr_mult: 2 }
+
+    convolution_param {
+        num_output: 100
+        kernel_size: 4
+        stride: 1
+        weight_filler { type: "xavier" }
+        bias_filler { type: "constant" }
+    }
+}
+
+layer {
+    name: "pool3"
+    type: "Pooling"
+    bottom: "conv3"
+    top: "pool3"
+
+    pooling_param {
+        pool: MAX
+        kernel_size: 2
+        stride: 2
+    }
+}
+
+layer {
+    name: "conv4"
+    type: "Convolution"
+    bottom: "pool3"
+    top: "conv4"
+
+    param { lr_mult: 1 }
+    param { lr_mult: 2 }
+
+    convolution_param {
+        num_output: 200
+        kernel_size: 4
+        stride: 1
+        weight_filler { type: "xavier" }
+        bias_filler { type: "constant" }
+    }
+}
+
+layer {
+    name: "pool4"
+    type: "Pooling"
+    bottom: "conv4"
+    top: "pool4"
+
+    pooling_param {
+        pool: MAX
+        kernel_size: 2
+        stride: 2
+    }
+}
+
+layer {
+    name: "fc1"
+    type: "InnerProduct"
+    bottom: "pool4"
+    top: "fc1"
+    param { lr_mult: 1 }
+    param { lr_mult: 2 }
+
+    inner_product_param {
+        num_output: 500
+        weight_filler { type: "xavier" }
+        bias_filler { type: "constant" }
+    }
+}
+
+layer {
+    name: "relu1"
+    type: "ReLU"
+    bottom: "fc1"
+    top: "fc1"
+}
+
+layer {
+    name: "fc2"
+    type: "InnerProduct"
+    bottom: "fc1"
+    top: "fc2"
+    param { lr_mult: 1 }
+    param { lr_mult: 2 }
+    inner_product_param {
+        num_output: 7
+        weight_filler { type: "xavier" }
+        bias_filler { type: "constant" }
+    }
+}
+
+layer {
+    name: "accuracy"
+    type: "Accuracy" 
+    bottom: "fc2"
+    bottom: "label"
+    top: "accuracy"
+    include {
+        phase: TEST
+    }
+}
+
+layer {
+    name: "prob"
+    type: "Softmax"
+    bottom: "fc2"
+    bottom: "label"
+    top: "prob"
+}

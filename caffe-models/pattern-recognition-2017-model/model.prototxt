@@ -1,0 +1,334 @@
+name: "PatternRecognition2017"
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    mirror: true
+    crop_size: 128
+    mean_file: "/home/alexj/coursework/cs686/project/implementation/lmdb-databases/training-set-mean.binaryproto"
+  }
+
+
+  data_param {
+    source: "/home/alexj/coursework/cs686/project/implementation/lmdb-databases/training_set.lmdb"
+    batch_size: 256
+    backend: LMDB
+  }
+}
+
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    mirror: false
+    crop_size: 128
+    mean_file: "/home/alexj/coursework/cs686/project/implementation/lmdb-databases/training-set-mean.binaryproto"
+  }
+
+  data_param {
+    source: "/home/alexj/coursework/cs686/project/implementation/lmdb-databases/validation_set.lmdb"
+    batch_size: 50
+    backend: LMDB
+  }
+}
+
+# First convolutional layer
+layer {
+    name: "conv1"
+    type: "Convolution"
+    bottom: "data"
+    top: "conv1"
+    param {
+        lr_mult: 1
+        decay_mult: 1
+    }
+    param {
+        lr_mult: 2
+        decay_mult: 0
+    }
+    convolution_param {
+        num_output: 20
+        kernel_size: 5
+        stride: 1
+        weight_filler {
+            type: "xavier"
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
+    }
+}
+
+# layer {
+#   name: "relu1"
+#   type: "ReLU"
+#   bottom: "conv1"
+#   top: "conv1"
+# }
+
+layer {
+    name: "pool1"
+    type: "Pooling"
+    bottom: "conv1"
+    top: "pool1"
+    pooling_param {
+        pool: MAX
+        kernel_size: 2
+        stride: 2
+    }
+}
+
+layer {
+    name: "norm1"
+    type: "LRN"
+    bottom: "pool1"
+    top: "norm1"
+    lrn_param {
+        local_size: 5
+        alpha: 0.0001
+        beta: 0.75
+    }
+}
+
+# Second convolutional layer
+layer {
+    name: "conv2"
+    type: "Convolution"
+    bottom: "data"
+    top: "conv2"
+    param {
+        lr_mult: 1
+        decay_mult: 1
+    }
+    param {
+        lr_mult: 2
+        decay_mult: 0
+    }
+    convolution_param {
+        num_output: 50
+        kernel_size: 5
+        stride: 1
+        weight_filler {
+            type: "xavier"
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
+    }
+}
+
+layer {
+    name: "pool2"
+    type: "Pooling"
+    bottom: "conv2"
+    top: "pool2"
+    pooling_param {
+        pool: MAX
+        kernel_size: 2
+        stride: 2
+    }
+}
+
+layer {
+    name: "norm2"
+    type: "LRN"
+    bottom: "pool2"
+    top: "norm2"
+    lrn_param {
+        local_size: 5
+        alpha: 0.0001
+        beta: 0.75
+    }
+}
+
+# Third convolutional layer
+layer {
+    name: "conv3"
+    type: "Convolution"
+    bottom: "data"
+    top: "conv3"
+    param {
+        lr_mult: 1
+        decay_mult: 1
+    }
+    param {
+        lr_mult: 2
+        decay_mult: 0
+    }
+    convolution_param {
+        num_output: 100
+        kernel_size: 4
+        stride: 1
+        weight_filler {
+            type: "xavier"
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
+    }
+}
+
+layer {
+    name: "pool3"
+    type: "Pooling"
+    bottom: "conv2"
+    top: "pool3"
+    pooling_param {
+        pool: MAX
+        kernel_size: 2
+        stride: 2
+    }
+}
+
+layer {
+    name: "norm3"
+    type: "LRN"
+    bottom: "pool3"
+    top: "norm3"
+    lrn_param {
+        local_size: 5
+        alpha: 0.0001
+        beta: 0.75
+    }
+}
+
+# Fourth convolutional layer
+layer {
+    name: "conv4"
+    type: "Convolution"
+    bottom: "data"
+    top: "conv4"
+    param {
+        lr_mult: 1
+        decay_mult: 1
+    }
+    param {
+        lr_mult: 2
+        decay_mult: 0
+    }
+    convolution_param {
+        num_output: 200
+        kernel_size: 4
+        stride: 1
+        weight_filler {
+            type: "xavier"
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
+    }
+}
+
+layer {
+    name: "pool4"
+    type: "Pooling"
+    bottom: "conv2"
+    top: "pool4"
+    pooling_param {
+        pool: MAX
+        kernel_size: 2
+        stride: 2
+    }
+}
+
+# layer {
+#   name: "fc6"
+#   type: "InnerProduct"
+#   bottom: "pool5"
+#   top: "fc6"
+#   param {
+#     lr_mult: 1
+#     decay_mult: 1
+#   }
+#   param {
+#     lr_mult: 2
+#     decay_mult: 0
+#   }
+#   inner_product_param {
+#     num_output: 4096
+#     weight_filler {
+#       type: "gaussian"
+#       std: 0.005
+#     }
+#     bias_filler {
+#       type: "constant"
+#       value: 1
+#     }
+#   }
+# }
+
+layer {
+    name: "fc1"
+    type: "InnerProduct"
+    param { lr_mult: 1 }
+    param { lr_mult: 2 }
+    inner_product_param {
+        num_output: 500
+        weight_filler {
+            type: "xavier"
+        }
+        bias_filler {
+            type: "constant"
+        }
+    }
+    bottom: "pool4"
+    top: "fc1"
+}
+
+layer {
+    name: "relu1"
+    type: "ReLU"
+    bottom: "fc1"
+    top: "fc1"
+}
+
+layer {
+    name: "drop1"
+    type: "Dropout"
+    bottom: "fc1"
+    top: "fc1"
+    dropout_param { dropout_ratio: 0.5 }
+}
+
+layer {
+    name: "fc2"
+    type: "InnerProduct"
+    param: { lr_mult: 1 }
+    param: { lr_mult: 2 }
+    inner_product_param {
+        num_output: 7
+        weight_filler { type: "xavier" }
+        bias_filler { type: "constant" }
+    }
+    bottom: "fc1"
+    top: "fc2"
+}
+
+layer {
+    name: "drop2"
+    type: "Dropout"
+    bottom: "fc2"
+    top: "fc2"
+    dropout_param { dropout_ratio: 0.5 }
+}
+
+layer {
+    name: "loss"
+    type: "SoftmaxWithLoss"
+    bottom: "fc2"
+    bottom: "label"
+}
